@@ -1,8 +1,9 @@
 CREATE TABLE library_user
 (
 	id		 SERIAL PRIMARY KEY,
-	username   VARCHAR(50)  NOT NULL UNIQUE,
-	email	  VARCHAR(100) NOT NULL UNIQUE,
+    username   VARCHAR(50)  NOT NULL UNIQUE,
+	password    VARCHAR(255) NOT NULL,
+	email	  VARCHAR(100),
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -25,7 +26,7 @@ CREATE TABLE reservation
 	id		 SERIAL PRIMARY KEY,
 	library_user_id	INT		 NOT NULL,
 	book_id	INT		 NOT NULL,
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	created_at TIMESTAMP,
 	expires_at TIMESTAMP, -- This will be set to created_at + 7 days if reservationEntity isn’t picked up.
 	status	 VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'CANCELED', 'EXPIRED')),
 	CONSTRAINT fk_library_user FOREIGN KEY (library_user_id) REFERENCES library_user (id),
@@ -40,7 +41,7 @@ CREATE INDEX idx_reservations_book ON reservation (id);
 -- For efficient expiration checks
 CREATE INDEX idx_reservations_expires ON reservation (expires_at);
 
-
-insert into library_user (id,username,email) values ('1','carloscarvalho','carval.carlos@outlook.com');
+-- The password for this user carloscarvalho to be used to retrieve token is 'abc123'
+insert into library_user (id, username, password, email) values ('1','carloscarvalho', '$2a$10$hdqNwGZaZMYSOx.be5p6R.2QEkPRTsbBzsFyEuudd.waRfinqNpVy', 'carval.carlos@outlook.com');
 insert into book (id,title,author,isbn,available_copies,total_copies) values ('1','Book Title','Carlos Carvalho','ISBN','10','15');
 insert into reservation (id,library_user_id,book_id,expires_at,status) values ('1','1','1','2025-03-21 22:19:05.371949','ACTIVE');

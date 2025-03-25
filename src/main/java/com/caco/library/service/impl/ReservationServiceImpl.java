@@ -3,23 +3,28 @@ package com.caco.library.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.caco.library.dto.ReservationRequest;
 import com.caco.library.exception.BookNotAvailableException;
 import com.caco.library.exception.InvalidReservationStateException;
 import com.caco.library.exception.ReservationLimitExceededException;
 import com.caco.library.exception.ResourceNotFoundException;
+import com.caco.library.model.dto.request.ReservationRequest;
 import com.caco.library.model.entity.BookEntity;
+import com.caco.library.model.entity.LibraryUserEntity;
 import com.caco.library.model.entity.ReservationEntity;
 import com.caco.library.model.entity.ReservationStatus;
-import com.caco.library.model.entity.LibraryUserEntity;
 import com.caco.library.repository.BookRepository;
-import com.caco.library.repository.ReservationRepository;
 import com.caco.library.repository.LibraryUserRepository;
+import com.caco.library.repository.ReservationRepository;
 import com.caco.library.service.ReservationService;
+
+import static com.caco.library.utils.LibraryMessages.BOOK_DOES_NOT_EXIST;
+import static com.caco.library.utils.LibraryMessages.BOOK_NOT_AVAILABLE;
+import static com.caco.library.utils.LibraryMessages.RESERVATION_NOT_ACTIVE;
+import static com.caco.library.utils.LibraryMessages.RESERVATION_NOT_FOUND;
+import static com.caco.library.utils.LibraryMessages.USER_HAS_THREE_ACTIVE_RESERVATIONS;
+import static com.caco.library.utils.LibraryMessages.USER_NOT_FOUND;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -43,18 +48,18 @@ public class ReservationServiceImpl implements ReservationService {
 	public ReservationEntity createReservation(ReservationRequest reservationRequest) {
 
 		LibraryUserEntity libraryUserEntity = libraryUserRepository.findById(reservationRequest.getUserId())
-				.orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
 
 		long activeReservations = reservationRepository.countByLibraryUserEntityIdAndStatus(reservationRequest.getUserId(), ReservationStatus.ACTIVE);
 		if (activeReservations >= 3) {
-			throw new ReservationLimitExceededException("O usuário já possui 3 reservas ACTIVEs");
+			throw new ReservationLimitExceededException(USER_HAS_THREE_ACTIVE_RESERVATIONS);
 		}
 
 		BookEntity bookEntity = bookRepository.findById(reservationRequest.getBookId())
-				.orElseThrow(() -> new ResourceNotFoundException("Livro não encontrado"));
+				.orElseThrow(() -> new ResourceNotFoundException(BOOK_DOES_NOT_EXIST));
 
 		if (bookEntity.getAvailableCopies() <= 0) {
-			throw new BookNotAvailableException("Livro não disponível para reserva");
+			throw new BookNotAvailableException(BOOK_NOT_AVAILABLE);
 		}
 
 		ReservationEntity reservationEntity = new ReservationEntity();
@@ -81,16 +86,16 @@ public class ReservationServiceImpl implements ReservationService {
 
 	@Override
 	public ReservationEntity cancelReservation(Long reservationId) {
-		ReservationEntity reservationEntity = null;
+		ReservationEntity reservationEntity;
 		try {
 			reservationEntity = reservationRepository.findById(reservationId)
-					.orElseThrow(() -> new ResourceNotFoundException("Reserva não encontrada"));
+					.orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
 		} catch (ResourceNotFoundException e) {
 			throw new RuntimeException(e);
 		}
 
 		if (reservationEntity.getStatus() != ReservationStatus.ACTIVE) {
-			throw new InvalidReservationStateException("A reserva não está ACTIVE e não pode ser cancelada");
+			throw new InvalidReservationStateException(RESERVATION_NOT_ACTIVE);
 		}
 
 		reservationEntity.setStatus(ReservationStatus.CANCELED);

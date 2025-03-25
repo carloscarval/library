@@ -1,4 +1,4 @@
-package com.caco.library.dto;
+package com.caco.library.model.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReservationRequest {
+public class AuthenticationRequest {
 
-	private Long userId;
-
-	private Long bookId;
+	private String username;
+	private String password;
 }
