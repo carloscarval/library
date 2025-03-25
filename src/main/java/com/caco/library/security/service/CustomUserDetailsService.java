@@ -8,21 +8,21 @@ import org.springframework.stereotype.Service;
 import com.caco.library.model.entity.LibraryUserEntity;
 import com.caco.library.repository.LibraryUserRepository;
 
-import static com.caco.library.utils.LibraryMessages.USER_NOT_FOUND;
+import static com.caco.library.utils.LibraryMessages.USER_DOES_NOT_EXIST;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-	private final LibraryUserRepository userRepository;
+	private final LibraryUserRepository libraryUserRepository;
 
-	public CustomUserDetailsService(LibraryUserRepository userRepository) {
-		this.userRepository = userRepository;
+	public CustomUserDetailsService(LibraryUserRepository libraryUserRepository) {
+		this.libraryUserRepository = libraryUserRepository;
 	}
 
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-		LibraryUserEntity user = userRepository.findByUsername(username)
-				.orElseThrow(() -> new UsernameNotFoundException(String.format(USER_NOT_FOUND, username)));
+		LibraryUserEntity user = libraryUserRepository.findByUsername(username)
+				.orElseThrow(() -> new UsernameNotFoundException(String.format(USER_DOES_NOT_EXIST, username)));
 		return new org.springframework.security.core.userdetails.User(
 				user.getUsername(),
 				user.getPassword(),

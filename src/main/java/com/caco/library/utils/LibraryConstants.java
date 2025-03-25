@@ -2,6 +2,9 @@ package com.caco.library.utils;
 
 public class LibraryConstants {
 
+	// Numbers
+	public static final int MAXIMUM_ACTIVE_RESERVATIONS = 3;
+
 	// API Constants
 	public static final String API_BASE_URL = "/api";
 	public static final String API_USERS = "/users";

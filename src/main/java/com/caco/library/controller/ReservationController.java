@@ -41,7 +41,7 @@ public class ReservationController {
 	// 2. Retrieve an existing reservation by ID.
 	@GetMapping(API_RESERVATION_ID)
 	public ResponseEntity<Reservation> getReservationById(@PathVariable Long reservationId) {
-		ReservationEntity reservationEntity = reservationService.getReservationById(reservationId).get();
+		ReservationEntity reservationEntity = reservationService.getReservationById(reservationId);
 		return ResponseEntity.ok(Reservation.fromEntity(reservationEntity));
 	}
 

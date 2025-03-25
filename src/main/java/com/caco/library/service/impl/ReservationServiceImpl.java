@@ -2,108 +2,103 @@ package com.caco.library.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.caco.library.exception.BookNotAvailableException;
 import com.caco.library.exception.InvalidReservationStateException;
+import com.caco.library.exception.ReservationDoesNotExistException;
 import com.caco.library.exception.ReservationLimitExceededException;
-import com.caco.library.exception.ResourceNotFoundException;
 import com.caco.library.model.dto.request.ReservationRequest;
 import com.caco.library.model.entity.BookEntity;
 import com.caco.library.model.entity.LibraryUserEntity;
 import com.caco.library.model.entity.ReservationEntity;
 import com.caco.library.model.entity.ReservationStatus;
-import com.caco.library.repository.BookRepository;
-import com.caco.library.repository.LibraryUserRepository;
 import com.caco.library.repository.ReservationRepository;
+import com.caco.library.service.BookService;
+import com.caco.library.service.LibraryUserService;
 import com.caco.library.service.ReservationService;
 
-import static com.caco.library.utils.LibraryMessages.BOOK_DOES_NOT_EXIST;
-import static com.caco.library.utils.LibraryMessages.BOOK_NOT_AVAILABLE;
-import static com.caco.library.utils.LibraryMessages.RESERVATION_NOT_ACTIVE;
-import static com.caco.library.utils.LibraryMessages.RESERVATION_NOT_FOUND;
-import static com.caco.library.utils.LibraryMessages.USER_HAS_THREE_ACTIVE_RESERVATIONS;
-import static com.caco.library.utils.LibraryMessages.USER_NOT_FOUND;
+import jakarta.transaction.Transactional;
+
+import static com.caco.library.utils.LibraryConstants.MAXIMUM_ACTIVE_RESERVATIONS;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
 
 	private final ReservationRepository reservationRepository;
-	private final LibraryUserRepository libraryUserRepository;
-	private final BookRepository bookRepository;
+	private final LibraryUserService libraryUserService;
+	private final BookService bookService;
 
 	@Autowired
 	public ReservationServiceImpl(
 			ReservationRepository reservationRepository,
-			LibraryUserRepository libraryUserRepository,
-			BookRepository bookRepository
+			LibraryUserService libraryUserService,
+			BookService bookService
 	) {
 		this.reservationRepository = reservationRepository;
-		this.libraryUserRepository = libraryUserRepository;
-		this.bookRepository = bookRepository;
+		this.libraryUserService = libraryUserService;
+		this.bookService = bookService;
 	}
 
 	@Override
+	@Transactional // Used to prevent saving information in case one of the calls fail
 	public ReservationEntity createReservation(ReservationRequest reservationRequest) {
+		LibraryUserEntity libraryUserEntity = libraryUserService.checkLibraryUser(reservationRequest.getLibraryUserId());
+		BookEntity bookEntity = bookService.checkBook(reservationRequest.getBookId());
 
-		LibraryUserEntity libraryUserEntity = libraryUserRepository.findById(reservationRequest.getUserId())
-				.orElseThrow(() -> new ResourceNotFoundException(USER_NOT_FOUND));
+		checkActiveReservationsLimit(reservationRequest.getLibraryUserId());
 
-		long activeReservations = reservationRepository.countByLibraryUserEntityIdAndStatus(reservationRequest.getUserId(), ReservationStatus.ACTIVE);
-		if (activeReservations >= 3) {
-			throw new ReservationLimitExceededException(USER_HAS_THREE_ACTIVE_RESERVATIONS);
-		}
-
-		BookEntity bookEntity = bookRepository.findById(reservationRequest.getBookId())
-				.orElseThrow(() -> new ResourceNotFoundException(BOOK_DOES_NOT_EXIST));
-
-		if (bookEntity.getAvailableCopies() <= 0) {
-			throw new BookNotAvailableException(BOOK_NOT_AVAILABLE);
-		}
-
+		// Create reservation
 		ReservationEntity reservationEntity = new ReservationEntity();
 		reservationEntity.setLibraryUserEntity(libraryUserEntity);
 		reservationEntity.setBookEntity(bookEntity);
 		reservationEntity.setCreatedAt(LocalDateTime.now());
 		reservationEntity.setStatus(ReservationStatus.ACTIVE);
 
+		// Update book availability
 		bookEntity.setAvailableCopies(bookEntity.getAvailableCopies() - 1);
-		bookRepository.save(bookEntity);
+		bookService.updateBook(bookEntity);
 
 		return reservationRepository.save(reservationEntity);
 	}
 
+	private void checkActiveReservationsLimit(Long libraryUserId) {
+		long activeReservations = reservationRepository.countByLibraryUserEntityIdAndStatus(libraryUserId, ReservationStatus.ACTIVE);
+		if (activeReservations >= MAXIMUM_ACTIVE_RESERVATIONS) {
+			throw new ReservationLimitExceededException();
+		}
+	}
+
 	@Override
-	public Optional<ReservationEntity> getReservationById(Long reservationId) {
-		return reservationRepository.findById(reservationId);
+	public ReservationEntity getReservationById(Long reservationId) {
+		return reservationRepository.findById(reservationId).orElseThrow(ReservationDoesNotExistException::new);
 	}
 
 	@Override
 	public List<ReservationEntity> getReservationsByLibraryUserId(Long libraryUserId) {
+		libraryUserService.checkLibraryUser(libraryUserId);
 		return reservationRepository.findByLibraryUserEntityId(libraryUserId);
 	}
 
 	@Override
+	@Transactional // Used to prevent saving information in case one of the calls fail
 	public ReservationEntity cancelReservation(Long reservationId) {
-		ReservationEntity reservationEntity;
-		try {
-			reservationEntity = reservationRepository.findById(reservationId)
-					.orElseThrow(() -> new ResourceNotFoundException(RESERVATION_NOT_FOUND));
-		} catch (ResourceNotFoundException e) {
-			throw new RuntimeException(e);
-		}
+		ReservationEntity reservationEntity = reservationRepository.findById(reservationId)
+				.orElseThrow(ReservationDoesNotExistException::new);
 
-		if (reservationEntity.getStatus() != ReservationStatus.ACTIVE) {
-			throw new InvalidReservationStateException(RESERVATION_NOT_ACTIVE);
-		}
+		checkReservationIsNotActive(reservationEntity);
 
 		reservationEntity.setStatus(ReservationStatus.CANCELED);
 		reservationRepository.save(reservationEntity);
 
 		BookEntity bookEntity = reservationEntity.getBookEntity();
 		bookEntity.setAvailableCopies(bookEntity.getAvailableCopies() + 1);
-		bookRepository.save(bookEntity);
-		return null;
+		bookService.updateBook(bookEntity);
+		return reservationEntity;
+	}
+
+	private void checkReservationIsNotActive(ReservationEntity reservationEntity) {
+		if (reservationEntity.getStatus() != ReservationStatus.ACTIVE) {
+			throw new InvalidReservationStateException();
+		}
 	}
 }

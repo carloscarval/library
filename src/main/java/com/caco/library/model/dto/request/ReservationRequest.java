@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ReservationRequest {
 
-	private Long userId;
+	private Long libraryUserId;
 
 	private Long bookId;
 }

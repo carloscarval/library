@@ -28,14 +28,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 	private final UserDetailsService userDetailsService;
+	private final RequestMatcher loginRequestMatcher = new AntPathRequestMatcher(API_AUTH + API_LOGIN);
+	private final RequestMatcher registerRequestMatcher = new AntPathRequestMatcher(API_AUTH + API_REGISTER);
 
 	public JwtRequestFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
 		this.jwtUtil = jwtUtil;
 		this.userDetailsService = userDetailsService;
 	}
-
-	private final RequestMatcher loginRequestMatcher = new AntPathRequestMatcher(API_AUTH + API_LOGIN);
-	private final RequestMatcher registerRequestMatcher = new AntPathRequestMatcher(API_AUTH + API_REGISTER);
 
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {

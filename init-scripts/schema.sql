@@ -42,6 +42,6 @@ CREATE INDEX idx_reservations_book ON reservation (id);
 CREATE INDEX idx_reservations_expires ON reservation (expires_at);
 
 -- The password for this user carloscarvalho to be used to retrieve token is 'abc123'
-insert into library_user (id, username, password, email) values ('1','carloscarvalho', '$2a$10$hdqNwGZaZMYSOx.be5p6R.2QEkPRTsbBzsFyEuudd.waRfinqNpVy', 'carval.carlos@outlook.com');
-insert into book (id,title,author,isbn,available_copies,total_copies) values ('1','Book Title','Carlos Carvalho','ISBN','10','15');
-insert into reservation (id,library_user_id,book_id,expires_at,status) values ('1','1','1','2025-03-21 22:19:05.371949','ACTIVE');
+insert into library_user (id, username, password, email) values ('123','carloscarvalho', '$2a$10$hdqNwGZaZMYSOx.be5p6R.2QEkPRTsbBzsFyEuudd.waRfinqNpVy', 'carval.carlos@outlook.com');
+insert into book (id,title,author,isbn,available_copies,total_copies) values ('123','Book Title','Carlos Carvalho','ISBN','10','15');
+insert into reservation (id,library_user_id,book_id,expires_at,status) values ('123','123','123','2025-03-21 22:19:05.371949','ACTIVE');

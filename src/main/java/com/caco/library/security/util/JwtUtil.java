@@ -1,6 +1,5 @@
 package com.caco.library.security.util;
 
-import java.security.Key;
 import java.util.Date;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;

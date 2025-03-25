@@ -7,24 +7,23 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.caco.library.exception.InvalidCredentialsException;
 import com.caco.library.model.dto.request.AuthenticationRequest;
 import com.caco.library.model.dto.request.CreateUserRequest;
 import com.caco.library.model.dto.response.Authentication;
 import com.caco.library.model.entity.LibraryUserEntity;
-import com.caco.library.repository.LibraryUserRepository;
 import com.caco.library.security.util.JwtUtil;
+import com.caco.library.service.LibraryUserService;
 
 import static com.caco.library.utils.LibraryConstants.API_AUTH;
 import static com.caco.library.utils.LibraryConstants.API_LOGIN;
 import static com.caco.library.utils.LibraryConstants.API_REGISTER;
-import static com.caco.library.utils.LibraryMessages.USERNAME_ALREADY_TAKEN;
+import static com.caco.library.utils.LibraryMessages.JWT_GENERATED_CORRECTLY;
 import static com.caco.library.utils.LibraryMessages.USER_CREATED;
-import static com.caco.library.utils.LibraryMessages.WRONG_USERNAME_OR_PASSWORD;
 
 @RestController
 @RequestMapping(API_AUTH)
@@ -37,13 +36,10 @@ public class AuthController {
 	private UserDetailsService userDetailsService;
 
 	@Autowired
+	private LibraryUserService libraryUserService;
+
+	@Autowired
 	private JwtUtil jwtUtil;
-
-	@Autowired
-	private LibraryUserRepository userRepository;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
 
 	@PostMapping(API_LOGIN)
 	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
@@ -52,26 +48,18 @@ public class AuthController {
 					new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
 			);
 		} catch (BadCredentialsException e) {
-			throw new Exception(WRONG_USERNAME_OR_PASSWORD, e);
+			throw new InvalidCredentialsException();
 		}
 
 		final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
 		final String jwt = jwtUtil.generateToken(userDetails.getUsername());
-
-		return ResponseEntity.ok(new Authentication(jwt));
+		LibraryUserEntity libraryUserEntity = libraryUserService.findByUsername(authenticationRequest.getUsername());
+		return ResponseEntity.ok(new Authentication(libraryUserEntity.getId(), jwt, JWT_GENERATED_CORRECTLY));
 	}
 
 	@PostMapping(API_REGISTER)
-	public ResponseEntity<?> registerUser(@RequestBody CreateUserRequest user) {
-		LibraryUserEntity libraryUserEntity = new LibraryUserEntity();
-		libraryUserEntity.setUsername(user.getUsername());
-		libraryUserEntity.setPassword(passwordEncoder.encode(user.getPassword()));
-		libraryUserEntity.setEmail(user.getEmail());
-		try {
-			userRepository.save(libraryUserEntity);
-		} catch (Exception e) {
-			return ResponseEntity.badRequest().body(USERNAME_ALREADY_TAKEN);
-		}
-		return ResponseEntity.ok(USER_CREATED);
+	public ResponseEntity<?> registerUser(@RequestBody CreateUserRequest userRequest) {
+		LibraryUserEntity libraryUserEntity = libraryUserService.registerLibraryUser(userRequest);
+		return ResponseEntity.ok(new Authentication(libraryUserEntity.getId(), null, USER_CREATED));
 	}
 }
