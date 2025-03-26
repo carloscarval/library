@@ -1,47 +1,52 @@
-CREATE TABLE library_user
+CREATE TABLE LIBRARY_USER
 (
-	id		 SERIAL PRIMARY KEY,
-    username   VARCHAR(50)  NOT NULL UNIQUE,
-	password    VARCHAR(255) NOT NULL,
-	email	  VARCHAR(100),
-	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ID         SERIAL PRIMARY KEY,
+    USERNAME   VARCHAR(50)  NOT NULL UNIQUE,
+    PASSWORD   VARCHAR(255) NOT NULL,
+    EMAIL      VARCHAR(100),
+    CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE book
+CREATE TABLE BOOK
 (
-	id			   SERIAL PRIMARY KEY,
-	title			VARCHAR(255) NOT NULL,
-	author		   VARCHAR(255) NOT NULL,
-	isbn			 VARCHAR(20)  NOT NULL UNIQUE,
-	available_copies INT		  NOT NULL,
-	total_copies	 INT		  NOT NULL, -- This can be useful to know the inventory size.
-	created_at	   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ID               SERIAL PRIMARY KEY,
+    TITLE            VARCHAR(255) NOT NULL,
+    AUTHOR           VARCHAR(255) NOT NULL,
+    ISBN             VARCHAR(20)  NOT NULL UNIQUE,
+    AVAILABLE_COPIES INT          NOT NULL,
+    TOTAL_COPIES     INT          NOT NULL,
+    CREATED_AT       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    VERSION          INT       DEFAULT 0
 );
 
 -- Create an index on title for faster search by title.
-CREATE INDEX idx_books_title ON book (title);
+CREATE INDEX IDX_BOOKS_TITLE ON BOOK (TITLE);
 
-CREATE TABLE reservation
+CREATE TABLE RESERVATION
 (
-	id		 SERIAL PRIMARY KEY,
-	library_user_id	INT		 NOT NULL,
-	book_id	INT		 NOT NULL,
-	created_at TIMESTAMP,
-	expires_at TIMESTAMP, -- This will be set to created_at + 7 days if reservationEntity isn’t picked up.
-	status	 VARCHAR(20) NOT NULL CHECK (status IN ('ACTIVE', 'CANCELED', 'EXPIRED')),
-	CONSTRAINT fk_library_user FOREIGN KEY (library_user_id) REFERENCES library_user (id),
-	CONSTRAINT fk_book FOREIGN KEY (book_id) REFERENCES book (id)
+    ID              SERIAL PRIMARY KEY,
+    LIBRARY_USER_ID INT         NOT NULL,
+    BOOK_ID         INT         NOT NULL,
+    CREATED_AT      TIMESTAMP,
+    EXPIRES_AT      TIMESTAMP, -- This will be set to created_at + 7 days if reservationEntity isn’t picked up.
+    STATUS          VARCHAR(20) NOT NULL CHECK (STATUS IN ('ACTIVE', 'CANCELED', 'EXPIRED')),
+    CONSTRAINT FK_LIBRARY_USER FOREIGN KEY (LIBRARY_USER_ID) REFERENCES LIBRARY_USER (ID),
+    CONSTRAINT FK_BOOK FOREIGN KEY (BOOK_ID) REFERENCES BOOK (ID)
 );
 
 -- Indexes to support efficient queries:
 -- For retrieving reservation by libraryUserEntity
-CREATE INDEX idx_reservations_library_user ON reservation (id);
+CREATE INDEX IDX_RESERVATIONS_LIBRARY_USER ON RESERVATION (ID);
 -- For retrieving reservation by bookEntity
-CREATE INDEX idx_reservations_book ON reservation (id);
+CREATE INDEX IDX_RESERVATIONS_BOOK ON RESERVATION (ID);
 -- For efficient expiration checks
-CREATE INDEX idx_reservations_expires ON reservation (expires_at);
+CREATE INDEX IDX_RESERVATIONS_EXPIRES ON RESERVATION (EXPIRES_AT);
 
 -- The password for this user carloscarvalho to be used to retrieve token is 'abc123'
-insert into library_user (id, username, password, email) values ('123','carloscarvalho', '$2a$10$hdqNwGZaZMYSOx.be5p6R.2QEkPRTsbBzsFyEuudd.waRfinqNpVy', 'carval.carlos@outlook.com');
-insert into book (id,title,author,isbn,available_copies,total_copies) values ('123','Book Title','Carlos Carvalho','ISBN','10','15');
-insert into reservation (id,library_user_id,book_id,expires_at,status) values ('123','123','123','2025-03-21 22:19:05.371949','ACTIVE');
+INSERT INTO LIBRARY_USER (ID, USERNAME, PASSWORD, EMAIL)
+VALUES ('123', 'carloscarvalho', '$2a$10$hdqNwGZaZMYSOx.be5p6R.2QEkPRTsbBzsFyEuudd.waRfinqNpVy',
+        'carval.carlos@outlook.com');
+INSERT INTO BOOK (ID, TITLE, AUTHOR, ISBN, AVAILABLE_COPIES, TOTAL_COPIES, VERSION)
+VALUES ('123', 'Book Title', 'Carlos Carvalho', 'ISBN', '14', '15', 1);
+INSERT INTO RESERVATION (ID, LIBRARY_USER_ID, BOOK_ID, EXPIRES_AT, STATUS)
+VALUES ('123', '123', '123', '2025-03-21 22:19:05.371949', 'ACTIVE');

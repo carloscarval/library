@@ -1,14 +1,16 @@
 package com.caco.library.service.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import com.caco.library.exception.BookDoesNotExistException;
-import com.caco.library.exception.BookNotAvailableException;
+import com.caco.library.exception.DataChangedException;
 import com.caco.library.model.entity.BookEntity;
 import com.caco.library.repository.BookRepository;
 import com.caco.library.service.BookService;
-
-import jakarta.transaction.Transactional;
 
 @Service
 public class BookServiceImpl implements BookService {
@@ -20,22 +22,21 @@ public class BookServiceImpl implements BookService {
 		this.bookRepository = bookRepository;
 	}
 
+	@Cacheable(value = "books", key = "#bookId")
+	@Transactional(readOnly = true)
 	@Override
-	public BookEntity checkBook(Long bookId) {
-		BookEntity bookEntity = bookRepository.findById(bookId).orElseThrow(BookDoesNotExistException::new);
-		checkBookAvailability(bookEntity);
-		return bookEntity;
+	public BookEntity getBookById(Long bookId) {
+		return bookRepository.findById(bookId).orElseThrow(BookDoesNotExistException::new);
 	}
 
 	@Override
 	@Transactional
+	@CacheEvict(value = "books", key = "#bookEntity.id")
 	public void updateBook(BookEntity bookEntity) {
-		bookRepository.save(bookEntity);
-	}
-
-	private void checkBookAvailability(BookEntity bookEntity) {
-		if (bookEntity.getAvailableCopies() <= 0) {
-			throw new BookNotAvailableException();
+		try {
+			bookRepository.save(bookEntity);
+		} catch (ObjectOptimisticLockingFailureException e) {
+			throw new DataChangedException();
 		}
 	}
 }

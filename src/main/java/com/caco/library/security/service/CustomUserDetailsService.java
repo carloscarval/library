@@ -1,6 +1,7 @@
 package com.caco.library.security.service;
 
 import java.util.ArrayList;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,10 +24,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		LibraryUserEntity user = libraryUserRepository.findByUsername(username)
 				.orElseThrow(() -> new UsernameNotFoundException(String.format(USER_DOES_NOT_EXIST, username)));
-		return new org.springframework.security.core.userdetails.User(
-				user.getUsername(),
-				user.getPassword(),
-				new ArrayList<>()
+		return new User(user.getUsername(), user.getPassword(), new ArrayList<>()
 		);
 	}
 }

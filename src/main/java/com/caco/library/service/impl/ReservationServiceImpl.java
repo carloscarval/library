@@ -3,7 +3,12 @@ package com.caco.library.service.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.caco.library.exception.BookNotAvailableException;
 import com.caco.library.exception.InvalidReservationStateException;
 import com.caco.library.exception.ReservationDoesNotExistException;
 import com.caco.library.exception.ReservationLimitExceededException;
@@ -16,8 +21,6 @@ import com.caco.library.repository.ReservationRepository;
 import com.caco.library.service.BookService;
 import com.caco.library.service.LibraryUserService;
 import com.caco.library.service.ReservationService;
-
-import jakarta.transaction.Transactional;
 
 import static com.caco.library.utils.LibraryConstants.MAXIMUM_ACTIVE_RESERVATIONS;
 
@@ -41,10 +44,12 @@ public class ReservationServiceImpl implements ReservationService {
 
 	@Override
 	@Transactional // Used to prevent saving information in case one of the calls fail
+	@CacheEvict(value = "reservationsByUser", key = "#reservationRequest.libraryUserId") //
 	public ReservationEntity createReservation(ReservationRequest reservationRequest) {
 		LibraryUserEntity libraryUserEntity = libraryUserService.checkLibraryUser(reservationRequest.getLibraryUserId());
-		BookEntity bookEntity = bookService.checkBook(reservationRequest.getBookId());
+		BookEntity bookEntity = bookService.getBookById(reservationRequest.getBookId());
 
+		checkBookAvailability(bookEntity);
 		checkActiveReservationsLimit(reservationRequest.getLibraryUserId());
 
 		// Create reservation
@@ -61,6 +66,12 @@ public class ReservationServiceImpl implements ReservationService {
 		return reservationRepository.save(reservationEntity);
 	}
 
+	private void checkBookAvailability(BookEntity bookEntity) {
+		if (bookEntity.getAvailableCopies() <= 0) {
+			throw new BookNotAvailableException();
+		}
+	}
+
 	private void checkActiveReservationsLimit(Long libraryUserId) {
 		long activeReservations = reservationRepository.countByLibraryUserEntityIdAndStatus(libraryUserId, ReservationStatus.ACTIVE);
 		if (activeReservations >= MAXIMUM_ACTIVE_RESERVATIONS) {
@@ -69,11 +80,15 @@ public class ReservationServiceImpl implements ReservationService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	@Cacheable(value = "reservationById", key = "#reservationId") // Adding to cache
 	public ReservationEntity getReservationById(Long reservationId) {
 		return reservationRepository.findById(reservationId).orElseThrow(ReservationDoesNotExistException::new);
 	}
 
 	@Override
+	@Transactional(readOnly = true)
+	@Cacheable(value = "reservationsByUser", key = "#libraryUserId") // Adding to cache
 	public List<ReservationEntity> getReservationsByLibraryUserId(Long libraryUserId) {
 		libraryUserService.checkLibraryUser(libraryUserId);
 		return reservationRepository.findByLibraryUserEntityId(libraryUserId);
@@ -81,6 +96,10 @@ public class ReservationServiceImpl implements ReservationService {
 
 	@Override
 	@Transactional // Used to prevent saving information in case one of the calls fail
+	@Caching(evict = {
+			@CacheEvict(value = "reservationById", key = "#reservationId"), // Update cache when reservations are updated
+			@CacheEvict(value = "reservationsByUser", allEntries = true),
+	})
 	public ReservationEntity cancelReservation(Long reservationId) {
 		ReservationEntity reservationEntity = reservationRepository.findById(reservationId)
 				.orElseThrow(ReservationDoesNotExistException::new);

@@ -13,19 +13,29 @@ services:
     command:
       - "postgres"
       - "-c"
-      - "listen_addresses=*"  # Permite conexões de qualquer IP
+      - "listen_addresses=*"  # Allow connections from any IP
   app:
     build: .
     depends_on:
       - postgres
+      - redis
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/library_reservation
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
       JWT_SECRET: "secreta_muito_segura_para_o_token_jwt_123456"
     ports:
       - "8080:8080"
       - "5005:5005"
     command: java -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005 -jar library.jar
+  redis:
+    image: "redis:latest"
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
 volumes:
   pgdata:
+  redisdata:

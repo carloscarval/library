@@ -4,7 +4,7 @@ import com.caco.library.model.entity.BookEntity;
 
 public interface BookService {
 
-	BookEntity checkBook(Long bookId);
+	BookEntity getBookById(Long bookId);
 
 	void updateBook(BookEntity bookEntity);
 }
