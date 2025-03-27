@@ -2,25 +2,36 @@ package com.caco.library.security.util;
 
 import java.util.Date;
 import javax.crypto.SecretKey;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtUtil {
-	private static final String SECRET_KEY = "secure_secret_for_jwt_token_123456";
-	private static final long EXPIRATION_TIME = 600000; // 10 minutes
 
-	private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+	@Value("${jwt.secret}")
+	private String secret;
+
+	@Value("${token.expiration.time}")
+	private long tokenExpirationTime;
+
+	private SecretKey key;
+
+	@PostConstruct
+	public void init() {
+		this.key = Keys.hmacShaKeyFor(secret.getBytes());
+	}
 
 	public String generateToken(String username) {
 		return Jwts.builder()
 				.setSubject(username)
 				.setIssuedAt(new Date())
-				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+				.setExpiration(new Date(System.currentTimeMillis() + tokenExpirationTime))
 				.signWith(key, SignatureAlgorithm.HS256)
 				.compact();
 	}
@@ -34,7 +45,7 @@ public class JwtUtil {
 
 	public boolean validateToken(String token) {
 		try {
-			Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);
+			Jwts.parser().verifyWith(key).build().parseClaimsJws(token);
 			return true;
 		} catch (JwtException e) {
 			return false;
