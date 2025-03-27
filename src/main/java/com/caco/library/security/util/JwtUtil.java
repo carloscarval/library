@@ -11,7 +11,7 @@ import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
-	private static final String SECRET_KEY = "secreta_muito_segura_para_o_token_jwt_123456";
+	private static final String SECRET_KEY = "secure_secret_for_jwt_token_123456";
 	private static final long EXPIRATION_TIME = 600000; // 10 minutes
 
 	private final SecretKey key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());

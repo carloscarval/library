@@ -25,7 +25,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
-      JWT_SECRET: "secreta_muito_segura_para_o_token_jwt_123456"
+      JWT_SECRET: "secure_secret_for_jwt_token_123456"
     ports:
       - "8080:8080"
       - "5005:5005"
