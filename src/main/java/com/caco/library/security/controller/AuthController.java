@@ -14,11 +14,13 @@ import com.caco.library.security.util.JwtUtil;
 import com.caco.library.service.LibraryUserService;
 
 import static com.caco.library.utils.LibraryConstants.API_AUTH;
+import static com.caco.library.utils.LibraryConstants.API_BASE_URL;
 import static com.caco.library.utils.LibraryConstants.API_LOGIN;
 import static com.caco.library.utils.LibraryConstants.API_REGISTER;
+import static com.caco.library.utils.LibraryConstants.API_VERSION;
 
 @RestController
-@RequestMapping(API_AUTH)
+@RequestMapping(API_BASE_URL + API_VERSION + API_AUTH)
 public class AuthController {
 
 	private final AuthService authService;
@@ -28,7 +30,7 @@ public class AuthController {
 	}
 
 	@PostMapping(API_LOGIN)
-	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+	public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
 		return ResponseEntity.ok(authService.authenticateUser(authenticationRequest));
 	}
 

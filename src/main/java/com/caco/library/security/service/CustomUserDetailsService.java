@@ -23,7 +23,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		LibraryUserEntity user = libraryUserRepository.findByUsername(username)
-				.orElseThrow(() -> new UsernameNotFoundException(String.format(USER_DOES_NOT_EXIST, username)));
+				.orElseThrow(() -> new UsernameNotFoundException(USER_DOES_NOT_EXIST));
 		return new User(user.getUsername(), user.getPassword(), new ArrayList<>()
 		);
 	}

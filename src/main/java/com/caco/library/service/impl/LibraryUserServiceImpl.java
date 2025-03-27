@@ -52,12 +52,11 @@ public class LibraryUserServiceImpl implements LibraryUserService {
 		libraryUserEntity.setPassword(passwordEncoder.encode(userRequest.getPassword()));
 		libraryUserEntity.setEmail(userRequest.getEmail());
 		try {
-			libraryUserRepository.save(libraryUserEntity);
+			return libraryUserRepository.save(libraryUserEntity);
 		} catch (DataIntegrityViolationException e) {
 			throw new UsernameAlreadyTakenException();
 		} catch (Exception e) {
 			throw new IllegalStateException(UNEXPECTED_EXCEPTION_WHILE_REGISTERING_USER, e);
 		}
-		return libraryUserEntity;
 	}
 }

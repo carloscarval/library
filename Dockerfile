@@ -14,5 +14,4 @@ FROM openjdk:17-jdk-slim
 WORKDIR /library
 COPY --from=build /library/target/*.jar library.jar
 EXPOSE 8080 5005
-#ENTRYPOINT ["java", "-jar", "library.jar"]
 CMD ["java", "-jar", "library.jar"]

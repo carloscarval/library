@@ -15,8 +15,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import com.caco.library.security.filter.JwtRequestFilter;
 
 import static com.caco.library.utils.LibraryConstants.API_AUTH;
+import static com.caco.library.utils.LibraryConstants.API_BASE_URL;
 import static com.caco.library.utils.LibraryConstants.API_LOGIN;
 import static com.caco.library.utils.LibraryConstants.API_REGISTER;
+import static com.caco.library.utils.LibraryConstants.API_VERSION;
 
 @Configuration
 @EnableWebSecurity(debug = true)
@@ -43,7 +45,9 @@ public class SecurityConfig {
 		http
 				.csrf(AbstractHttpConfigurer::disable) // Disable CSRF because it's an API REST
 				.authorizeHttpRequests(auth -> auth
-						.requestMatchers(API_AUTH + API_LOGIN, API_AUTH + API_REGISTER).permitAll() // Allow access to login endpoint
+						.requestMatchers(
+								API_BASE_URL + API_VERSION + API_AUTH + API_LOGIN,
+								API_BASE_URL + API_VERSION + API_AUTH + API_REGISTER).permitAll() // Allow access to login and register endpoints
 						.anyRequest().authenticated() // Any other request should be authenticated
 				)
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

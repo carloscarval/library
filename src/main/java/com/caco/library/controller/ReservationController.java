@@ -23,9 +23,10 @@ import static com.caco.library.utils.LibraryConstants.API_LIBRARY_USER_ID;
 import static com.caco.library.utils.LibraryConstants.API_RESERVATIONS;
 import static com.caco.library.utils.LibraryConstants.API_RESERVATION_ID;
 import static com.caco.library.utils.LibraryConstants.API_USERS;
+import static com.caco.library.utils.LibraryConstants.API_VERSION;
 
 @RestController
-@RequestMapping(API_BASE_URL + API_RESERVATIONS)
+@RequestMapping(API_BASE_URL + API_VERSION + API_RESERVATIONS)
 @RequiredArgsConstructor
 public class ReservationController {
 
@@ -49,10 +50,7 @@ public class ReservationController {
 	@GetMapping(API_USERS + API_LIBRARY_USER_ID)
 	public ResponseEntity<Reservations> getReservationsByUser(@PathVariable Long libraryUserId) {
 		List<ReservationEntity> reservationEntities = reservationService.getReservationsByLibraryUserId(libraryUserId);
-		Reservations reservationResponses = new Reservations(reservationEntities.stream()
-				.map(Reservation::fromEntity)
-				.toList());
-		return ResponseEntity.ok(reservationResponses);
+		return ResponseEntity.ok(Reservations.fromEntity(reservationEntities));
 	}
 
 	// 4. Cancel a reservation.

@@ -18,8 +18,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import static com.caco.library.utils.LibraryConstants.API_AUTH;
+import static com.caco.library.utils.LibraryConstants.API_BASE_URL;
 import static com.caco.library.utils.LibraryConstants.API_LOGIN;
 import static com.caco.library.utils.LibraryConstants.API_REGISTER;
+import static com.caco.library.utils.LibraryConstants.API_VERSION;
 import static com.caco.library.utils.LibraryConstants.AUTHORIZATION_HEADER;
 import static com.caco.library.utils.LibraryConstants.BEARER_TOKEN_PREFIX;
 
@@ -28,8 +30,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 	private final UserDetailsService userDetailsService;
-	private final RequestMatcher loginRequestMatcher = new AntPathRequestMatcher(API_AUTH + API_LOGIN);
-	private final RequestMatcher registerRequestMatcher = new AntPathRequestMatcher(API_AUTH + API_REGISTER);
+	private final RequestMatcher loginRequestMatcher = new AntPathRequestMatcher(API_BASE_URL + API_VERSION + API_AUTH + API_LOGIN);
+	private final RequestMatcher registerRequestMatcher = new AntPathRequestMatcher(API_BASE_URL + API_VERSION + API_AUTH + API_REGISTER);
 
 	public JwtRequestFilter(JwtUtil jwtUtil, UserDetailsService userDetailsService) {
 		this.jwtUtil = jwtUtil;
