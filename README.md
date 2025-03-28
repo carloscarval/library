@@ -62,6 +62,12 @@ A scheduled job runs in the background to automatically mark reservations as `EX
 - Tests written with JUnit 5 and Mockito
 - Covers all public logic and exception flows
 
+## 📬 Postman Testing
+
+To test the API endpoints, import the Postman collection from `postman/library-api.postman_collection.json`.
+
+You can also import the environment file from `postman/library-api.postman_environment.json`.
+
 ## 🐳 Docker Support
 
 This application is Docker-ready. To run it:
