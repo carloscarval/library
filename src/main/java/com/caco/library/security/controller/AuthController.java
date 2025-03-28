@@ -1,8 +1,6 @@
 package com.caco.library.security.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,8 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.caco.library.model.dto.request.AuthenticationRequest;
 import com.caco.library.model.dto.request.CreateUserRequest;
 import com.caco.library.security.service.AuthService;
-import com.caco.library.security.util.JwtUtil;
-import com.caco.library.service.LibraryUserService;
 
 import static com.caco.library.utils.LibraryConstants.API_AUTH;
 import static com.caco.library.utils.LibraryConstants.API_BASE_URL;

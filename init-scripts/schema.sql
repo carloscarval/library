@@ -35,12 +35,13 @@ CREATE TABLE RESERVATION
 );
 
 -- Indexes to support efficient queries:
--- For retrieving reservation by libraryUserEntity
-CREATE INDEX IDX_RESERVATIONS_LIBRARY_USER ON RESERVATION (ID);
--- For retrieving reservation by bookEntity
-CREATE INDEX IDX_RESERVATIONS_BOOK ON RESERVATION (ID);
--- For efficient expiration checks
-CREATE INDEX IDX_RESERVATIONS_EXPIRES ON RESERVATION (EXPIRES_AT);
+-- Indexes for finding reservations by user and book
+CREATE INDEX IDX_RESERVATIONS_LIBRARY_USER ON RESERVATION (LIBRARY_USER_ID);
+CREATE INDEX IDX_RESERVATIONS_BOOK ON RESERVATION (BOOK_ID);
+-- Index for finding reservations through status
+CREATE INDEX IDX_RESERVATIONS_USER_STATUS ON RESERVATION (LIBRARY_USER_ID, STATUS);
+-- Index for finding reservations using the date it was created in order to expire it periodically
+CREATE INDEX IDX_RESERVATIONS_CREATED_AT ON RESERVATION (CREATED_AT);
 
 -- The password for this user carloscarvalho to be used to retrieve token is 'abc123'
 INSERT INTO LIBRARY_USER (ID, USERNAME, PASSWORD, EMAIL)

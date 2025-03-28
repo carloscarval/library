@@ -2,14 +2,14 @@ package com.caco.library.repository;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-
-import com.caco.library.model.entity.LibraryUserEntity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import com.caco.library.model.entity.LibraryUserEntity;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 class LibraryUserRepositoryTest {

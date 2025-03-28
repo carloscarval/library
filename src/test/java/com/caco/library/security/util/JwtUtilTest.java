@@ -18,10 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 })
 class JwtUtilTest {
 
+	private final String USERNAME = "john";
 	@Autowired
 	private JwtUtil classUnderTest;
-
-	private final String USERNAME = "john";
 
 	@Nested
 	class GenerateTokenTest {
